@@ -37,9 +37,11 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Departamento::class, DepartamentoPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
 
-        $permisos = \App\Models\Permiso::all();
-        foreach ($permisos as $permiso) {
-            Gate::define($permiso->slug, fn (User $user) => $user->tienePermiso($permiso->slug));
+        if (Schema::hasTable('permisos')) {
+            $permisos = \App\Models\Permiso::all();
+            foreach ($permisos as $permiso) {
+                Gate::define($permiso->slug, fn (User $user) => $user->tienePermiso($permiso->slug));
+            }
         }
     }
 }
