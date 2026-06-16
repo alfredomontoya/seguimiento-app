@@ -16,7 +16,7 @@ class Derivacion extends Model
 
     protected $fillable = [
         'tramite_id', 'departamento_origen_id', 'departamento_destino_id',
-        'funcionario_id', 'fecha_asignacion', 'comentarios_internos',
+        'user_id', 'fecha_asignacion', 'comentarios_internos',
         'glosa', 'creado_por_id',
     ];
 
@@ -35,9 +35,9 @@ class Derivacion extends Model
         return $this->belongsTo(Departamento::class, 'departamento_destino_id');
     }
 
-    public function funcionario(): BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(Funcionario::class, 'funcionario_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function creadoPor(): BelongsTo

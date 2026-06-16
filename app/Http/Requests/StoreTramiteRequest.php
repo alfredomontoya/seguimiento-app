@@ -21,6 +21,7 @@ class StoreTramiteRequest extends FormRequest
             'tipo_tramite_id' => ['required', 'exists:tipo_tramites,id'],
             'persona_id' => ['required', 'exists:personas,id'],
             'departamento_id' => ['nullable', 'exists:departamentos,id'],
+            'user_id' => ['nullable', 'exists:users,id'],
             'glosa_entrega' => ['nullable', 'string'],
         ];
     }

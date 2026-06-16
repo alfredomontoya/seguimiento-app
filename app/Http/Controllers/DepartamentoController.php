@@ -18,7 +18,7 @@ class DepartamentoController extends Controller
 
         return Inertia::render('Departamento/Index', [
             'departamentos' => Departamento::with('padre')
-                ->withCount('funcionarios', 'tramites')
+                ->withCount('usuarios', 'tramites')
                 ->orderBy('nombre')
                 ->paginate(10),
         ]);

@@ -13,7 +13,7 @@ return new class extends Migration
             $table->foreignId('tramite_id')->constrained('tramites')->cascadeOnDelete();
             $table->foreignId('departamento_origen_id')->constrained('departamentos');
             $table->foreignId('departamento_destino_id')->constrained('departamentos');
-            $table->foreignId('funcionario_id')->nullable()->constrained('funcionarios')->nullOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->date('fecha_asignacion');
             $table->text('comentarios_internos')->nullable();
             $table->text('glosa')->nullable();

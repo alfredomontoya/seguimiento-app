@@ -17,7 +17,7 @@ class DerivarTramiteRequest extends FormRequest
     {
         return [
             'departamento_destino_id' => ['required', 'exists:departamentos,id'],
-            'funcionario_id' => ['nullable', 'exists:funcionarios,id'],
+            'user_id' => ['nullable', 'exists:users,id'],
             'glosa' => ['nullable', 'string'],
             'comentarios_internos' => ['nullable', 'string'],
         ];

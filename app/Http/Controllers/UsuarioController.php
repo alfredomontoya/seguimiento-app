@@ -40,6 +40,11 @@ class UsuarioController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'rol_id' => $request->rol_id,
+            'nombres' => $request->nombres,
+            'apellidos' => $request->apellidos,
+            'nro_documento' => $request->nro_documento,
+            'telefono' => $request->telefono,
+            'profesion' => $request->profesion,
             'activo' => $request->boolean('activo', true),
         ]);
 
@@ -60,7 +65,7 @@ class UsuarioController extends Controller
         $this->authorize('update', $usuario);
 
         return Inertia::render('Usuario/Edit', [
-            'usuario' => $usuario,
+            'usuario' => $usuario->load('rol'),
             'roles' => Rol::orderBy('nombre')->get(),
         ]);
     }
@@ -73,6 +78,11 @@ class UsuarioController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'unique:users,email,' . $usuario->id],
             'rol_id' => ['required', 'exists:roles,id'],
+            'nombres' => ['required', 'string', 'max:255'],
+            'apellidos' => ['required', 'string', 'max:255'],
+            'nro_documento' => ['nullable', 'string', 'max:20', 'unique:users,nro_documento,' . $usuario->id],
+            'telefono' => ['nullable', 'string', 'max:20'],
+            'profesion' => ['nullable', 'string', 'max:255'],
             'activo' => ['boolean'],
         ]);
 

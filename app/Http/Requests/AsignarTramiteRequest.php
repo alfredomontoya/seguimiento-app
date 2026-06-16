@@ -17,7 +17,7 @@ class AsignarTramiteRequest extends FormRequest
     {
         return [
             'departamento_id' => ['required', 'exists:departamentos,id'],
-            'funcionario_id' => ['required', 'exists:funcionarios,id'],
+            'user_id' => ['required', 'exists:users,id'],
         ];
     }
 }

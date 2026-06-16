@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Departamento extends Model
@@ -42,9 +43,11 @@ class Departamento extends Model
         return $this->hasMany(Tramite::class);
     }
 
-    public function funcionarios(): HasMany
+    public function usuarios(): BelongsToMany
     {
-        return $this->hasMany(Funcionario::class);
+        return $this->belongsToMany(User::class, 'departamento_user')
+            ->withPivot('activo')
+            ->withTimestamps();
     }
 
     public function derivacionesOrigen(): HasMany

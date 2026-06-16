@@ -428,6 +428,128 @@ PUT      /permisos/{permiso}             → PermisoController@update
 - **Estado global:** Zustand para UI state (sidebar abierto/cerrado, tema,
   filtros globales). TanStack Query para server state (datos del backend).
 
+## Patrón de vista Index (listado)
+
+Todas las vistas `Index` (listados) siguen esta estructura unificada:
+
+```
+<AuthenticatedLayout header={<h2>Título</h2>}>
+    <Head title="Título" />
+
+    <div className="py-2">
+        <div className="w-full">
+            {# Barra de acciones: búsqueda + botón nuevo #}
+            <div className="mb-6 flex items-center justify-between">
+                <SearchInput
+                    value={search}
+                    onChange={setSearch}
+                    onSearch={handleSearch}
+                    onClear={handleClear}
+                    placeholder="Buscar por campos relevantes..."
+                />
+                <Link href={route('entidad.create')}
+                    className="inline-flex items-center gap-1 rounded-full bg-gray-800 px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-opacity hover:opacity-90">
+                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    Nuevo
+                </Link>
+            </div>
+
+            <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                <div className="overflow-x-auto p-6">
+                    <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gradient-to-b from-green-800 to-green-600">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Columna</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-white">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white">
+                            {items.length === 0 ? (
+                                <tr>
+                                    <td colSpan={N} className="px-6 py-12 text-center text-sm text-gray-500">
+                                        Mensaje vacío / "No se encontraron resultados"
+                                    </td>
+                                </tr>
+                            ) : (
+                                items.map((item) => (
+                                    <tr key={item.id} className="group transition-all hover:bg-green-50 hover:shadow-[0_0_0_1px_#16a34a]">
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-gray-900 group-hover:rounded-l-lg group-hover:shadow-[0_0_0_1px_#16a34a]">...</td>
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 group-hover:shadow-[0_0_0_1px_#16a34a]">...</td>
+                                        <td className="whitespace-nowrap px-6 py-4 text-sm text-gray-500 group-hover:rounded-r-lg group-hover:shadow-[0_0_0_1px_#16a34a]">
+                                            <div className="flex items-center gap-2">
+                                                <Link href={route('entidad.edit', item.id)}
+                                                    className="text-indigo-600 hover:text-indigo-900">Editar</Link>
+                                                <span className="text-gray-300">|</span>
+                                                <button onClick={() => ...}
+                                                    className="text-indigo-600 hover:text-indigo-900">Eliminar</button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+
+                    {!search && last_page > 1 && (
+                        <div className="mt-4 flex items-center justify-between">
+                            <div className="text-sm text-gray-700">
+                                Mostrando {from} a {to} de {total} registros
+                            </div>
+                            <div className="flex gap-1">
+                                {links.map((link, i) => {
+                                    const isPrev = link.label.toLowerCase().includes('previous');
+                                    const isNext = link.label.toLowerCase().includes('next');
+                                    return (
+                                        <button key={i} disabled={!link.url}
+                                            onClick={() => { if (link.url) router.get(link.url); }}
+                                            className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-sm ${
+                                                link.active
+                                                    ? 'bg-gray-800 text-white'
+                                                    : link.url ? 'bg-white text-gray-700 hover:bg-gray-100'
+                                                    : 'cursor-not-allowed text-gray-400'
+                                            }`}>
+                                            {isPrev ? (
+                                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                                </svg>
+                                            ) : isNext ? (
+                                                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                                </svg>
+                                            ) : (
+                                                <span dangerouslySetInnerHTML={{ __html: link.label }} />
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    </div>
+</AuthenticatedLayout>
+```
+
+### Reglas del patrón
+
+1. **Header:** Solo el título `<h2>`. Sin botones ni búsqueda.
+2. **Padding:** `py-2` en el contenedor principal.
+3. **Barra de acciones:** `mb-6 flex items-center justify-between` con input de búsqueda a la izquierda y botón "+ Nuevo" `bg-gray-800` a la derecha.
+5. **Input de búsqueda:** Usar el componente reutilizable `<SearchInput>` de `@/Components/SearchInput`. Props: `value`, `onChange`, `onSearch`, `onClear`, `placeholder`. Estilo Google: `rounded-full`, `py-2 pl-10 pr-20`, lupa SVG dentro del input con posición absoluta a la izquierda. Borde `gray-300`, focus `indigo-500`, placeholder descriptivo.
+6. **Botón "+ Nuevo":** `rounded-full`, `bg-gray-800`, icono SVG de `+`, texto "Nuevo". Mismo estilo que el botón de búsqueda.
+7. **Tabla:** `min-w-full divide-y divide-gray-200`. Headers en `uppercase tracking-wider text-gray-500`. Celdas `px-6 py-4 text-sm text-gray-500`, primera celda `font-medium text-gray-900`. `<tbody>` sin `divide-y`.
+8. **Hover de fila:** `<tr className="group transition-all hover:bg-green-50">`. Primera `<td>` con `group-hover:rounded-l-lg group-hover:shadow-[1px_0_0_0_#16a34a,0_-1px_0_0_#16a34a,0_1px_0_0_#16a34a]` (izquierda + arriba + abajo), última `<td>` con similarly `rounded-r-lg` y sombra solo derecha + arriba + abajo, `<td>` intermedias con `group-hover:shadow-[0_-1px_0_0_#16a34a,0_1px_0_0_#16a34a]` (solo arriba/abajo). Sin sombras entre celdas adyacentes.
+9. **Acciones:** Enlaces `text-indigo-600` con separador `|` gris (`text-gray-300`).
+10. **Estado vacío:** `px-6 py-12 text-center text-sm text-gray-500` con mensaje distinto según haya búsqueda activa o no.
+11. **Paginación:** Botones circulares (no `<Link>`) con `router.get(url)`. `rounded-full h-8 w-8 inline-flex items-center justify-center`. Previous/Next renderizan solo iconos SVG de chevron (detectados por `link.label.includes('previous'/'next')`). Activo `bg-gray-800 text-white`, inactivo `bg-white text-gray-700 hover:bg-gray-100`, deshabilitado `cursor-not-allowed text-gray-400`.
+12. **Búsqueda client-side:** Usa dos estados: `search` (input) y `searchQuery` (filtro). `searchQuery` se actualiza solo al presionar Enter o el botón de lupa. Filtra con `useMemo` y oculta paginación mientras hay búsqueda activa.
+13. **Highlight:** Función `highlightText()` que envuelve coincidencias con `<mark className="rounded bg-yellow-200 px-0.5">`. Usa `searchQuery` como criterio, no `search`.
+14. **Interfaz PaginatedData:** Debe incluir `current_page`, `last_page`, `per_page`, `total`, `from`, `to` y `links`.
+
 ## Rutas planeadas
 
 ```

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Models\Cargo;
 use App\Models\Departamento;
 use App\Models\Derivacion;
-use App\Models\Funcionario;
 use App\Models\Persona;
 use App\Models\TipoTramite;
 use App\Models\Tramite;
@@ -17,12 +17,14 @@ use Illuminate\Support\Facades\DB;
 class DatabaseSeeder extends Seeder
 {
     private array $tables = [
+        'cargo_user',
+        'departamento_user',
         'derivaciones',
         'tramites',
         'personas',
-        'funcionarios',
         'departamentos',
         'tipo_tramites',
+        'cargos',
         'permiso_rol',
         'permisos',
         'users',
@@ -43,7 +45,7 @@ class DatabaseSeeder extends Seeder
 
         User::factory()->create([
             'name' => 'Admin',
-            'email' => 'admin@admin.com',
+            'email' => 'admin@diprove.com',
             'rol_id' => 1,
         ]);
 
@@ -64,14 +66,33 @@ class DatabaseSeeder extends Seeder
                 'actualizado_por_id' => $admin->id,
             ]);
 
-        Funcionario::factory(15)
-            ->sequence(fn ($seq) => [
-                'departamento_id' => $departamentos->get($seq->index % 4)->id,
-            ])
-            ->create([
-                'creado_por_id' => $admin->id,
-                'actualizado_por_id' => $admin->id,
+        $cargos = collect();
+        foreach ([
+            ['nombre' => 'Jefe', 'slug' => 'jefe'],
+            ['nombre' => 'Analista', 'slug' => 'analista'],
+            ['nombre' => 'Técnico', 'slug' => 'tecnico'],
+            ['nombre' => 'Asistente', 'slug' => 'asistente'],
+        ] as $cargoData) {
+            $cargos->push(Cargo::create([...$cargoData, 'activo' => true]));
+        }
+
+        $users = User::all();
+        foreach ($users as $i => $user) {
+            DB::table('departamento_user')->insert([
+                'user_id' => $user->id,
+                'departamento_id' => $departamentos->get($i % 4)->id,
+                'activo' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
+            DB::table('cargo_user')->insert([
+                'user_id' => $user->id,
+                'cargo_id' => $cargos->get($i % 4)->id,
+                'activo' => $i === 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         TipoTramite::factory(5)
             ->sequence(
@@ -92,7 +113,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         $secretarias = User::where('rol_id', 2)->get();
-        $profesionales = Funcionario::all();
+        $profesionales = User::where('rol_id', 3)->get();
         $personas = Persona::all();
         $tiposTramite = TipoTramite::all();
 
@@ -138,14 +159,15 @@ class DatabaseSeeder extends Seeder
 
             if (in_array($estado, ['en_proceso', 'derivado', 'terminado', 'entregado'])) {
                 foreach ($tramites as $tramite) {
-                    $funcionario = $profesionales->where('departamento_id', $tramite->departamento_id)->first()
-                        ?? $profesionales->random();
+                    $user = $profesionales->firstWhere(
+                        fn ($u) => $u->departamentos()->wherePivot('activo', true)->first()?->id === $tramite->departamento_id
+                    ) ?? $profesionales->random();
 
                     Derivacion::create([
                         'tramite_id' => $tramite->id,
                         'departamento_origen_id' => $departamentos->random()->id,
                         'departamento_destino_id' => $tramite->departamento_id,
-                        'funcionario_id' => $funcionario->id,
+                        'user_id' => $user->id,
                         'fecha_asignacion' => $tramite->fecha_recepcion,
                         'creado_por_id' => $secretarias->random()->id,
                     ]);

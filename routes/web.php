@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DepartamentoController;
-use App\Http\Controllers\FuncionarioController;
+
 use App\Http\Controllers\PermisoController;
 use App\Http\Controllers\PersonaController;
 use App\Http\Controllers\ProfileController;
@@ -36,7 +36,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::resource('departamentos', DepartamentoController::class);
-    Route::resource('funcionarios', FuncionarioController::class);
     Route::resource('personas', PersonaController::class);
     Route::resource('tipos-tramite', TipoTramiteController::class);
     Route::resource('usuarios', UsuarioController::class);

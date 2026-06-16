@@ -9,10 +9,10 @@ use App\Http\Requests\DerivarTramiteRequest;
 use App\Http\Requests\StoreTramiteRequest;
 use App\Models\Departamento;
 use App\Models\Derivacion;
-use App\Models\Funcionario;
 use App\Models\Persona;
 use App\Models\TipoTramite;
 use App\Models\Tramite;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -28,7 +28,7 @@ class TramiteController extends Controller
 
         if (!auth()->user()->tienePermiso('tramites.ver_todos')) {
             $query->whereHas('derivaciones', function ($q) {
-                $q->where('funcionario_id', auth()->user()->funcionario?->id);
+                $q->where('user_id', auth()->id());
             });
         }
 
@@ -46,7 +46,7 @@ class TramiteController extends Controller
             'tiposTramite' => TipoTramite::orderBy('nombre')->get(),
             'departamentos' => Departamento::orderBy('nombre')->get(),
             'personas' => Persona::orderBy('apellidos')->get(),
-            'funcionarios' => Funcionario::with('departamento')->orderBy('apellidos')->get(),
+            'usuarios' => User::orderBy('name')->get(),
         ]);
     }
 
@@ -71,8 +71,8 @@ class TramiteController extends Controller
             'creado_por_id' => $request->user()->id,
         ]);
 
-        if ($request->departamento_id && $request->funcionario_id) {
-            $this->asignarTramite($tramite, $request->departamento_id, $request->funcionario_id, $request->user()->id);
+        if ($request->departamento_id && $request->user_id) {
+            $this->asignarTramite($tramite, $request->departamento_id, (int) $request->user_id, $request->user()->id);
         }
 
         return redirect()->route('tramites.show', $tramite)->with('success', 'Trámite creado correctamente.');
@@ -88,13 +88,13 @@ class TramiteController extends Controller
                 'persona',
                 'departamento',
                 'creadoPor',
-                'derivaciones.funcionario',
+                'derivaciones.user',
                 'derivaciones.departamentoOrigen',
                 'derivaciones.departamentoDestino',
                 'derivaciones.creadoPor',
             ]),
             'departamentos' => Departamento::orderBy('nombre')->get(),
-            'funcionarios' => Funcionario::with('departamento')->orderBy('apellidos')->get(),
+            'usuarios' => User::orderBy('name')->get(),
         ]);
     }
 
@@ -137,7 +137,7 @@ class TramiteController extends Controller
             'tramite_id' => $tramite->id,
             'departamento_origen_id' => $tramite->departamento_id ?? $request->departamento_destino_id,
             'departamento_destino_id' => $request->departamento_destino_id,
-            'funcionario_id' => $request->funcionario_id,
+            'user_id' => $request->user_id,
             'fecha_asignacion' => now(),
             'comentarios_internos' => $request->comentarios_internos,
             'glosa' => $request->glosa,
@@ -157,7 +157,7 @@ class TramiteController extends Controller
     {
         $this->authorize('reasignar', $tramite);
 
-        $this->asignarTramite($tramite, $request->departamento_id, $request->funcionario_id, $request->user()->id);
+        $this->asignarTramite($tramite, $request->departamento_id, (int) $request->user_id, $request->user()->id);
 
         return redirect()->route('tramites.show', $tramite)->with('success', 'Trámite reasignado correctamente.');
     }
@@ -201,7 +201,7 @@ class TramiteController extends Controller
 
         if (!auth()->user()->tienePermiso('tramites.ver_todos')) {
             $query->whereHas('derivaciones', function ($q) {
-                $q->where('funcionario_id', auth()->user()->funcionario?->id);
+                $q->where('user_id', auth()->id());
             });
         }
 
@@ -219,7 +219,7 @@ class TramiteController extends Controller
 
         if (!auth()->user()->tienePermiso('tramites.ver_todos')) {
             $query->whereHas('derivaciones', function ($q) {
-                $q->where('funcionario_id', auth()->user()->funcionario?->id);
+                $q->where('user_id', auth()->id());
             });
         }
 
@@ -228,15 +228,15 @@ class TramiteController extends Controller
         ]);
     }
 
-    private function asignarTramite(Tramite $tramite, int $departamentoId, int $funcionarioId, int $userId): void
+    private function asignarTramite(Tramite $tramite, int $departamentoId, int $userId, int $creadoPorId): void
     {
         Derivacion::create([
             'tramite_id' => $tramite->id,
             'departamento_origen_id' => $tramite->departamento_id ?? $departamentoId,
             'departamento_destino_id' => $departamentoId,
-            'funcionario_id' => $funcionarioId,
+            'user_id' => $userId,
             'fecha_asignacion' => now(),
-            'creado_por_id' => $userId,
+            'creado_por_id' => $creadoPorId,
         ]);
 
         $tramite->update([
