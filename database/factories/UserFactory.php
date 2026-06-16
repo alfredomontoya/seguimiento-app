@@ -32,7 +32,7 @@ class UserFactory extends Factory
             'rol_id' => 2,
             'nombres' => fake()->firstName(),
             'apellidos' => fake()->lastName(),
-            'nro_documento' => fake()->optional()->numerify('########'),
+            'nro_documento' => fake()->unique()->numerify('########'),
             'telefono' => fake()->optional()->phoneNumber(),
             'profesion' => fake()->optional()->jobTitle(),
             'activo' => true,

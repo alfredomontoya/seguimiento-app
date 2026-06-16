@@ -28,7 +28,7 @@ return new class extends Migration
             $table->string('password');
             $table->string('nombres')->nullable();
             $table->string('apellidos')->nullable();
-            $table->string('nro_documento', 20)->nullable();
+            $table->string('nro_documento', 20)->nullable()->unique();
             $table->string('telefono', 20)->nullable();
             $table->string('profesion')->nullable();
             $table->boolean('activo')->default(true);
